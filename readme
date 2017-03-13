@@ -1,0 +1,21 @@
+simple_species class
+********************
+
+MMM20121026
+
+This class provides a nice plasma fluid species object (can be ions or electrons). It basically has a mass, a charge, and defines the thermodynamics of the species.
+
+There are three thermodynamic models defined so far 20121026:
+cold
+isothermal
+adiabatic
+
+Set thermo_model to one of these strings.
+
+thermo_model_data contains the necessary parameters for each model. You can set them freely.
+
+Functions h and T provide the barotropy and temperature of the species given n.
+
+Several checks to the input are carried out by the class. They should be fine.
+
+TEST_simple_species has the tests that the class has to pass to conform to its own definition. In fact, the tests are the "requirements" themselves. 

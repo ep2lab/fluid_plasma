@@ -1,6 +1,8 @@
 FLUID_PLASMA
 ==============
 
+[![DOI](https://zenodo.org/badge/84864291.svg)](https://zenodo.org/badge/latestdoi/84864291)
+
 A simple Matlab class for a fluid charged species with convenience methods. 
 Useful for plasma fluid models.
 

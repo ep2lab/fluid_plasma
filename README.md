@@ -35,19 +35,19 @@ electrons). It basically has mass, charge, and defines the thermodynamics of
 the species.
 * The `plasma` class stores one ion species and N electron species (to allow 
 for more flexible electron models), and adds a method to compute the sonic 
-velocity in the plasma.
+velocity in the plasma and Debye length.
 
-There are three thermodynamic models implemented so far (20121026):
+A new way of selecting the thermodynamic model has been implemented in
+20170625, which basically depends on the value of gamma. The old mechanism has
+been removed. This may impact other codes that depend on `fluid_plasma`.
 
-* cold
-* isothermal
-* polytropic
-
-Usage is straight forward. Start by creating a plasma object and setting its parameters, then call one of its methods:
+Usage is straight forward. Start by creating a plasma object and setting its
+parameters, then call one of its methods:
 
 ```Matlab
 p = fluid_plasma.plasma; % Create the default plasma object
-p.electrons{1}.T(1); % query the temperature of the first electron species for electron density n=1
+p.electrons{1}.T(1); % query the temperature of the first electron species for 
+electron density n=1
 ```
 
 ### Testing

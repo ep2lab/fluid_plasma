@@ -24,113 +24,106 @@ classdef species < handle
     properties % Basic Properties
         label % species name
         m % mass
-        q % electric charge
-        thermo_model % Any from those listed in valid_thermo_model
-        thermo_model_data % structure with thermodynamic data. Varies with model        
+        q % electric charge 
+        n0 % reference density
+        T0 % reference temperature, in J
+        gamma % polytropic cooling exponent
+    end 
+%----------------------------------------------------------------------    
+    methods % General species properties at the 0 state
+        function vth0 = vth0(h)
+            % thermal velocity (excluding numerical factors) 
+            vth0 = sqrt(h.T0 / h.m); % caution: T0 must be in J
+        end 
+        function omegap0 = omegap0(h)
+            % Plasma frequency
+            const = constants_and_units.constants; 
+            omegap0 = sqrt(h.n0*h.q^2 / (h.m*const.eps0));
+        end
+        function omegac0 = omegac0(h,B0)
+            % signed cyclotron frequency at magnetic field B0 
+            omegac0 = h.q .* B0 / h.m;
+        end
+        function larmor0 = larmor0(h,B0)
+            % thermal velocity Larmor radius at magnetic field B0 
+            larmor0 = h.vth0 / h.omegac0(B0);
+        end
+    end
+%----------------------------------------------------------------------    
+    methods % Electron properties at the 0 state        
+        function CoulombLog = CoulombLog(h)
+            % Coulomb logarithm, to be used with electrons only.
+            if ~any(regexpi(h.label,'electron'))
+                error('This property is only available for electron species')
+            end
+            const = constants_and_units.constants; 
+            CoulombLog = 9+0.5*log(1e18/h.n0 * const.J2eV(h.T0)^3); % caution: T0 must be in J
+        end 
+        function nuei0 = nuei0(h) 
+            % Coulomb collisions, to be used with electrons only. From expression 11.22, p 172 of GOLD95        
+            const = constants_and_units.constants; 
+            nuei0 = sqrt(2) * h.n0 * h.q^4 * h.CoulombLog /...
+                    (12 * pi^(3/2) * const.eps0^2 * sqrt(h.m) * h.T0^(3/2)); % caution: T0 must be in J
+        end
+        function Hall0 = Hall0(h)
+            % Hall parameter, to be used with electrons only 
+            Hall0 = h.omegac0 / h.nuei0; 
+        end 
     end
 %----------------------------------------------------------------------
-    properties (Hidden = true, Constant = true) 
-        valid_thermo_model = {'cold','isothermal','polytropic'} 
-        default_thermo_model_data = struct(... % library for reseting data upon model change
-            'cold',struct('n0',1,'T0',0,'gamma',1),...
-            'isothermal',struct('n0',1,'T0',1,'gamma',1),...
-            'polytropic',struct('n0',1,'T0',1,'gamma',1.2));
-        conditions_thermo_model_data = struct(... % Use "v." for properties in the corresponding default_thermo_model_data structure
-            'cold',{{'v.n0 > 0','v.T0 == 0'}},...
-            'isothermal',{{'v.n0 > 0','v.T0 > 0','v.gamma == 1'}},...
-            'polytropic',{{'v.n0 > 0','v.T0 > 0','v.gamma > 1'}});
-    end
-%----------------------------------------------------------------------
-methods % Thermodynamics
+    methods % Thermodynamics
         function T = T(h,n)
-            % Temperature as a function of n
-            k = h.thermo_model_data;
-            switch h.thermo_model
-                case 'cold'
-                    T = n*0 + 0;
-                case 'isothermal'
-                    T = n*0 + k.T0;
-                case 'polytropic'
-                    T = k.T0*((n/k.n0).^(k.gamma-1)); 
+            % Temperature as a function of n 
+            switch h.gamma
+                case 1
+                    T = n*0 + h.T0;
+                otherwise
+                    T = h.T0*((n/h.n0).^(h.gamma-1)); 
             end
         end
         function h = h(h_,n)
             % barotropy as function of n
-            k = h_.thermo_model_data;
-            switch h_.thermo_model
-                case 'cold'
-                    h = n*0 +0;
-                case 'isothermal'
-                    h = k.T0*log(n/k.n0);
-                case 'polytropic'
-                    h = k.T0*( k.gamma / (k.gamma-1))*((n/k.n0).^(k.gamma-1) -1); 
+            switch h_.gamma
+                case 1
+                    h = h_.T0*log(n/h_.n0);
+                otherwise
+                    h = h_.T0*( h_.gamma / (h_.gamma-1))*((n/h_.n0).^(h_.gamma-1) -1); 
             end
         end      
         function dh_dn = dh_dn(h_,n)
-            % derivative of h(n)
-            k = h_.thermo_model_data;
-            switch h_.thermo_model
-                case 'cold'
-                    dh_dn = n*0;
-                case 'isothermal'
-                    dh_dn = k.T0./n;
-                case 'polytropic'
-                    dh_dn = k.T0*k.gamma* (n/k.n0).^(k.gamma-2) /k.n0; 
+            % derivative of h(n)  
+            switch h_.gamma
+                case 1
+                    dh_dn = h_.T0./n;
+                otherwise
+                    dh_dn = h_.T0*h_.gamma* (n/h_.n0).^(h_.gamma-2) /h_.n0; 
             end
         end   
         function d2h_dn2 = d2h_dn2(h_,n)
             % derivative of h(n)
-            k = h_.thermo_model_data;
-            switch h_.thermo_model
-                case 'cold'
-                    d2h_dn2 = n*0;
-                case 'isothermal'
-                    d2h_dn2 = -k.T0./n.^2;
-                case 'polytropic'
-                    d2h_dn2 = k.T0*k.gamma*(k.gamma-2)* (n/k.n0).^(k.gamma-3) /k.n0^2; 
+            switch h_.gamma
+                case 1
+                    d2h_dn2 = -h_.T0./n.^2;
+                otherwise
+                    d2h_dn2 = h_.T0*h_.gamma*(h_.gamma-2)* (n/h_.n0).^(h_.gamma-3) /h_.n0^2; 
             end
         end  
         function n = n(h_,h)
-            % inverse of the barotropy function: given h, returns n
-            k = h_.thermo_model_data;
-            switch h_.thermo_model
-                case 'cold'
-                    error('species:cold:h_1','In the cold species, you cannot use the inverse of the barotropy function, n, to calculate the density');
-                case 'isothermal'
-                    n = k.n0*exp(h/k.T0);
-                case 'polytropic'
-                    n = k.n0*((k.gamma-1)/k.gamma *h/k.T0 + 1).^(1/(k.gamma-1));
+            % inverse of the barotropy function: given h, returns n 
+            switch h_.gamma
+                case 1
+                    if h_.T0 == 0 
+                        error('species:cold:h_1','If the species is cold, you cannot use the inverse of the barotropy function to calculate the density'); 
+                    end
+                    n = h_.n0*exp(h/h_.T0);
+                otherwise
+                    n = h_.n0*((h_.gamma-1)/h_.gamma *h/h_.T0 + 1).^(1/(h_.gamma-1));
                     if ~isreal(n)
                         n = 0;
                     end 
             end
         end       
-    end
-%----------------------------------------------------------------------    
-    methods (Access = 'protected', Hidden = true) % internal methods
-        function result = is_valid_thermo_model_data(h,v)
-            if ~isstruct(v)
-                result = false;
-                return;
-            end
-            result = true; % to start with
-            dmd_fieldnames = fieldnames(h.default_thermo_model_data.(h.thermo_model));
-            v_fieldnames = fieldnames(v);
-            result = result && (length(v_fieldnames) == length(dmd_fieldnames)); % check both lengths coincide
-            for i = 1:length(v_fieldnames)
-                if ~result % avoid extra checking if already false.
-                    return;
-                end
-                result = result && (ismember(v_fieldnames{i}, dmd_fieldnames)); % check field exist in default_thermo_model_data
-                result = result && (isa(v.(v_fieldnames{i}), class(h.default_thermo_model_data.(h.thermo_model).(v_fieldnames{i})))); % check whatever you set here is the same class as it should
-            end
-            % Model-specific checks
-            for i = 1:length(h.conditions_thermo_model_data.(h.thermo_model))
-                condition = h.conditions_thermo_model_data.(h.thermo_model){i};                
-                assert(eval(condition))
-            end        
-        end                
-    end
+    end 
 %----------------------------------------------------------------------
     methods % Basic object behavior (get/set/save/load/creator/destructor...)
         function h = species(varargin)            
@@ -139,19 +132,17 @@ methods % Thermodynamics
             p.addParameter('label','species',@ischar);
             p.addParameter('m',1,@isnumeric);
             p.addParameter('q',1,@isnumeric);
-            p.addParameter('thermo_model','cold',@(x)ismember(x,h.valid_thermo_model));                        
-            % Assign to object
-            p.KeepUnmatched = true;
-            p.parse(varargin{:});            
+            p.addParameter('n0',1,@isnumeric); % default: cold species
+            p.addParameter('T0',0,@isnumeric);
+            p.addParameter('gamma',1,@isnumeric);
+            % Assign to object 
+            p.parse(varargin{:});     
+            h.label = p.Results.label;    
             h.m = p.Results.m;
-            h.q = p.Results.q;
-            h.thermo_model = p.Results.thermo_model;
-            h.label = p.Results.label;
-            p.KeepUnmatched = false;            
-            % Deal with thermo_model_data
-            p.addParameter('thermo_model_data',h.default_thermo_model_data.(h.thermo_model),@isstruct);                         
-            p.parse(varargin{:}); % check all, and assign defaults to p.Results as needed.            
-            h.thermo_model_data = p.Results.thermo_model_data;
+            h.q = p.Results.q; 
+            h.n0 = p.Results.n0; 
+            h.T0 = p.Results.T0; 
+            h.gamma = p.Results.gamma;
         end        
         function set.label(h,v)
             assert(ischar(v));
@@ -164,23 +155,7 @@ methods % Thermodynamics
         function set.q(h,v)            
             assert(isscalar(v) && isreal(v));
             h.q = v;           
-        end  
-        function set.thermo_model(h,v)
-            assert(ismember(v,h.valid_thermo_model));       
-            % do the assign and check data
-            h.thermo_model = v;            
-            if ~h.is_valid_thermo_model_data(h.thermo_model_data)
-                h.thermo_model_data = h.default_thermo_model_data.(h.thermo_model);
-            end
-        end             
-        function set.thermo_model_data(h,v)
-            assert(h.is_valid_thermo_model_data(v)); % assert validity of structure
-            fn = fieldnames(v);
-            h.thermo_model_data = h.default_thermo_model_data.(h.thermo_model); % clear
-            for i = 1:length(fn) % this way it will be in the same order, and it will not complain about basic properties being set last during the partial assignments
-                h.thermo_model_data.(fn{i}) = v.(fn{i});
-            end
-        end        
+        end   
     end 
 %----------------------------------------------------------------------    
 end

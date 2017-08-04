@@ -57,7 +57,7 @@ classdef plasma < handle
         function h = plasma(varargin)
             % Process varargin and define defaults
             p = inputParser;      
-            p.addParameter('library','adim',@(x)any(strcmp(x,{'adim','Xe+','Ar+','H+'}))); 
+            p.addParameter('library','adim',@(x)any(strcmp(x,{'adim','Xe+','Ar+','H+','N+'}))); 
             % Library of plasmas, to construct default ions and electrons, overriden if given explicitly
             p.KeepUnmatched = true;    
             p.parse(varargin{:}); % check all, and assign defaults to p.Results as needed.            
@@ -82,6 +82,11 @@ classdef plasma < handle
                 case 'H+'
                     % H+ plasma with cold ions and isothermal electrons
                     mi = const.amu2kg(1.00794); me = const.me; qe = const.qe; 
+                    Ti = 0; Te = const.eV2J(10); n = 1e18;
+                    gammai = 1; gammae = 1;
+                case 'N+'
+                    % N+ plasma with cold ions and isothermal electrons
+                    mi = const.amu2kg(14.007); me = const.me; qe = const.qe; 
                     Ti = 0; Te = const.eV2J(10); n = 1e18;
                     gammai = 1; gammae = 1;
             end

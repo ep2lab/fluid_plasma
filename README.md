@@ -9,7 +9,7 @@ Useful for plasma fluid models.
 ## Installation
 
 Installation requires simply that you 
-[download FLUID_PLASMA](https://github.com/mariomerinomartinez/fluid_plasma/archive/master.zip) 
+[download FLUID_PLASMA](https://github.com/ep2lab/fluid_plasma/archive/master.zip) 
 and add the base directory (the one that contains the `+fluid_plasma` 
 directory) to your Matlab path.
 

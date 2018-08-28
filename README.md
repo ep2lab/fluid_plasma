@@ -65,7 +65,7 @@ are interested in contributing to the continued
 development of this or any of my other codes, you can contact us
 through our [website](http://ep2.uc3m.es/). 
 
-For updates and news, follow us on Twitter: @ep2lab.
+For updates and news, follow us on Twitter: [@ep2lab.](https://twitter.com/ep2lab).
   
 ## License
 

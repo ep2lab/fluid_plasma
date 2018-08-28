@@ -1,5 +1,5 @@
-FLUID_PLASMA
-==============
+FLUID PLASMA
+============
 
 [![DOI](https://zenodo.org/badge/84864291.svg)](https://zenodo.org/badge/latestdoi/84864291)
 

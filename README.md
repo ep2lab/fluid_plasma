@@ -19,11 +19,11 @@ A recent version of Matlab is needed to run the code.
 The code has been developed in Matlab 2016a Academic version. 
 
 FLUID_PLASMA 
-depends on other Matlab packages that you can download from my GitHub
+depends on other Matlab packages that you can download from our GitHub
 account:
-[utilities](https://github.com/mariomerinomartinez/utilities)
+[utilities](https://github.com/ep2lab/utilities)
 and
-[constants_and_units](https://github.com/mariomerinomartinez/constants_and_units).
+[constants_and_units](https://github.com/ep2lab/constants_and_units).
 These packages must be installed and added to your Matlab path beforehand.
 
 ## Usage
@@ -50,6 +50,8 @@ p.electrons{1}.T(1); % query the temperature of the first electron species for
 electron density n=1
 ```
 
+The current version is still preliminary and contains some known bugs.
+
 ### Testing
 
 Unit tests are found in the `/test` subdirectory. After adding the package to
@@ -60,8 +62,10 @@ subdirectory.
 
 If you have any comments for improvement or 
 are interested in contributing to the continued 
-development of this or any of my other codes, you can contact me 
-through my [personal website](http://mariomerino.uc3m.es/).
+development of this or any of my other codes, you can contact us
+through our [website](http://ep2.uc3m.es/). 
+
+For updates and news, follow us on Twitter: @ep2lab.
   
 ## License
 
